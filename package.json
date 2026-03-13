@@ -1,0 +1,203 @@
+{
+  "name": "symfony-dev-tools",
+  "displayName": "Symfony Dev Tools",
+  "description": "Editor-first Symfony tooling with translations, templates, tasks, and Doctrine diagrams.",
+  "version": "0.1.10",
+  "publisher": "develop-it",
+  "icon": "media/extension-icon.png",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "vscode": "^1.98.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "galleryBanner": {
+    "color": "#1c1e22",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onLanguage:php",
+    "onLanguage:twig",
+    "onLanguage:yaml",
+    "onView:symfonyDoctrineTools.actions",
+    "onView:symfonyDoctrineTools.diagram",
+    "onView:symfonyDoctrineTools.translations",
+    "onCommand:symfonyDevTools.runTask",
+    "onCommand:symfonyDevTools.openEntityDiagram",
+    "onCommand:symfonyDevTools.refreshEntityDiagram",
+    "onCommand:symfonyDevTools.openEntityFile",
+    "onCommand:symfonyDevTools.scanTranslations",
+    "onCommand:symfonyDevTools.openTranslationsReport",
+    "onCommand:symfonyDevTools.syncTranslations",
+    "onCommand:symfonyDevTools.insertTemplate",
+    "onCommand:symfonyDevTools.createSymfonyProject"
+  ],
+  "main": "./dist/extension.js",
+  "files": [
+    "dist/**",
+    "docs/**",
+    "media/**",
+    "node_modules/@viz-js/viz/**",
+    "node_modules/php-parser/**",
+    "node_modules/yaml/**",
+    "package.json",
+    "README.md",
+    "LICENSE*"
+  ],
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "compile": "npm run clean && tsc -p ./tsconfig.json",
+    "watch": "tsc -watch -p ./tsconfig.json",
+    "test:unit": "npm run compile && node ./scripts/run-unit-tests.mjs",
+    "test:integration": "npm run compile && node ./dist/test/runTest.js",
+    "test": "npm run test:unit && npm run test:integration",
+    "package:vsix": "npm run compile && npx @vscode/vsce package --allow-missing-repository",
+    "vscode:prepublish": "npm run compile"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "symfonyDevTools.runTask",
+        "title": "Symfony Dev Tools: Run Workspace Task"
+      },
+      {
+        "command": "symfonyDevTools.openEntityDiagram",
+        "title": "Symfony Dev Tools: Open Entity Diagram"
+      },
+      {
+        "command": "symfonyDevTools.refreshEntityDiagram",
+        "title": "Symfony Dev Tools: Refresh Entity Diagram"
+      },
+      {
+        "command": "symfonyDevTools.openEntityFile",
+        "title": "Symfony Dev Tools: Open Entity File"
+      },
+      {
+        "command": "symfonyDevTools.scanTranslations",
+        "title": "Symfony Dev Tools: Scan Translations"
+      },
+      {
+        "command": "symfonyDevTools.openTranslationsReport",
+        "title": "Symfony Dev Tools: Open Translations Report"
+      },
+      {
+        "command": "symfonyDevTools.syncTranslations",
+        "title": "Symfony Dev Tools: Sync Translations"
+      },
+      {
+        "command": "symfonyDevTools.insertTemplate",
+        "title": "Symfony Dev Tools: Insert Template"
+      },
+      {
+        "command": "symfonyDevTools.createSymfonyProject",
+        "title": "Symfony Dev Tools: Create Symfony Project"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "symfonyDoctrineTools",
+          "title": "Symfony Dev Tools",
+          "icon": "media/activity-bar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "symfonyDoctrineTools": [
+        {
+          "id": "symfonyDoctrineTools.actions",
+          "name": "Actions"
+        },
+        {
+          "id": "symfonyDoctrineTools.diagram",
+          "name": "Diagram",
+          "visibility": "hidden"
+        },
+        {
+          "id": "symfonyDoctrineTools.translations",
+          "name": "Translations"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Symfony Dev Tools",
+      "properties": {
+        "symfonyDevTools.entityRoots": {
+          "type": "array",
+          "default": [
+            "src/Entity"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Entity root folders scanned by the Doctrine entity diagram."
+        },
+        "symfonyDevTools.pinnedTasks": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Workspace task labels pinned at the top of the Actions view."
+        },
+        "symfonyDevTools.autoRefreshDiagram": {
+          "type": "boolean",
+          "default": true,
+          "description": "Refresh the entity diagram automatically when an entity file is saved."
+        },
+        "symfonyDevTools.includeMappedSuperclass": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include Doctrine mapped superclasses in the entity diagram."
+        },
+        "symfonyDevTools.referenceLocale": {
+          "type": "string",
+          "default": "fr",
+          "description": "Reference locale used by translation audit and sync."
+        },
+        "symfonyDevTools.translationSyncMode": {
+          "type": "string",
+          "default": "create-empty",
+          "enum": [
+            "create-empty"
+          ],
+          "description": "Default sync behavior for missing translation keys."
+        },
+        "symfonyDevTools.enableTranslationDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline diagnostics for translation issues in PHP, Twig, and YAML."
+        },
+        "symfonyDevTools.enableTranslationReport": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the global translation audit view."
+        },
+        "symfonyDevTools.ignoredTranslationFiles": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Translation file glob patterns to ignore during audit and sync, for example translations/validators*.yaml."
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "@viz-js/viz": "^3.25.0",
+    "php-parser": "^3.2.5",
+    "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.13.10",
+    "@types/vscode": "^1.98.0",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.6.2",
+    "mocha": "^11.1.0",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run server",
+      "type": "shell",
+      "command": "symfony server:stop;symfony server:start"
+    },
+    {
+      "label": "Webpack",
+      "type": "shell",
+      "command": "npm run watch"
+    },
+    {
+      "label": "Webpack (dev)",
+      "type": "shell",
+      "command": "npm run dev"
+    },
+    {
+      "label": "Webpack (build)",
+      "type": "shell",
+      "command": "npm run build"
+    },
+    {
+      "label": "Doctrine migration",
+      "type": "shell",
+      "command": "php bin/console make:migration;php bin/console doctrine:migration:migrate"
+    },
+    {
+      "label": "Entity",
+      "type": "shell",
+      "command": "php bin/console make:entity"
+    },
+    {
+      "label": "Controller",
+      "type": "shell",
+      "command": "php bin/console make:controller"
+    },
+    {
+      "label": "Crud",
+      "type": "shell",
+      "command": "php bin/console make:admin:crud"
+    }
+  ]
+}

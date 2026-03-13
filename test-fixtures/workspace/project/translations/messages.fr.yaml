@@ -1,0 +1,8 @@
+title:
+    home: "Accueil"
+catalog:
+    product:
+        title: "Produit"
+        missing: "Produit manquant"
+unused:
+    only_here: "Inutilise"

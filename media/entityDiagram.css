@@ -1,0 +1,244 @@
+:root {
+  color-scheme: light;
+  --diagram-text: #1f2933;
+  --diagram-muted: #49635b;
+  --diagram-panel: rgba(255, 255, 255, 0.84);
+  --diagram-border: rgba(73, 99, 91, 0.16);
+  --diagram-shadow: rgba(58, 72, 82, 0.08);
+  --diagram-action: #2f4f46;
+  --diagram-action-strong: #24423a;
+  --diagram-chip: rgba(249, 243, 227, 0.92);
+  --diagram-chip-active: #345a50;
+  --diagram-warning-border: rgba(143, 86, 59, 0.24);
+  --diagram-warning-bg: rgba(255, 247, 235, 0.92);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--diagram-text);
+  background:
+    radial-gradient(circle at top left, rgba(209, 170, 79, 0.18), transparent 28%),
+    linear-gradient(180deg, #f8f5ec 0%, #f1efe4 100%);
+  font-family: "Segoe UI", sans-serif;
+}
+
+.layout {
+  min-height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(480px, 1fr) auto;
+  gap: 12px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar__copy h1 {
+  margin: 0 0 2px;
+  font-size: 16px;
+}
+
+.toolbar__copy p {
+  margin: 0;
+  color: var(--diagram-muted);
+}
+
+.toolbar__controls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--diagram-muted);
+}
+
+.search-field input {
+  width: min(320px, 70vw);
+  border: 1px solid rgba(73, 99, 91, 0.22);
+  border-radius: 12px;
+  padding: 9px 12px;
+  color: var(--diagram-text);
+  background: rgba(255, 255, 255, 0.88);
+  font: inherit;
+}
+
+.zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.zoom-controls button,
+.domain-filter {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.zoom-controls button {
+  min-width: 42px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--diagram-action) 0%, var(--diagram-action-strong) 100%);
+}
+
+.zoom-controls button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.domain-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.domain-filter {
+  color: var(--diagram-muted);
+  background: var(--diagram-chip);
+  border: 1px solid rgba(73, 99, 91, 0.18);
+}
+
+.domain-filter.is-active {
+  color: #ffffff;
+  background: var(--diagram-chip-active);
+}
+
+.warnings,
+.empty-state {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--diagram-warning-border);
+  background: var(--diagram-warning-bg);
+}
+
+.warnings p {
+  margin: 0;
+}
+
+.warnings p + p {
+  margin-top: 8px;
+}
+
+.graph {
+  overflow: auto;
+  border: 1px solid var(--diagram-border);
+  border-radius: 16px;
+  background: var(--diagram-panel);
+  box-shadow: 0 18px 48px var(--diagram-shadow);
+  cursor: grab;
+}
+
+.graph.is-dragging {
+  cursor: grabbing;
+}
+
+.graph-content {
+  min-width: 100%;
+  min-height: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.graph-scene {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 100%;
+}
+
+.graph svg {
+  display: block;
+}
+
+.graph a.is-entity-link {
+  cursor: pointer;
+}
+
+.graph a.is-entity-link polygon,
+.graph a.is-entity-link ellipse,
+.graph a.is-entity-link path {
+  transition:
+    stroke 120ms ease,
+    fill 120ms ease;
+}
+
+.graph a.is-entity-link:hover polygon,
+.graph a.is-entity-link:focus polygon,
+.graph a.is-entity-link:hover ellipse,
+.graph a.is-entity-link:focus ellipse,
+.graph a.is-entity-link:hover path,
+.graph a.is-entity-link:focus path {
+  stroke: #c46d25 !important;
+  stroke-width: 2px !important;
+}
+
+.graph g.edge path,
+.graph g.edge polygon {
+  fill: none;
+  stroke: #3d564d;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.graph g.edge polygon {
+  fill: #3d564d;
+  stroke: #3d564d;
+}
+
+.graph text {
+  fill: var(--diagram-text);
+  font-family: "Segoe UI", sans-serif;
+}
+
+.is-hidden {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-rows: auto auto auto minmax(360px, 1fr) auto;
+  }
+
+  .search-field input {
+    width: 100%;
+  }
+
+  .graph-content {
+    padding: 14px;
+  }
+}

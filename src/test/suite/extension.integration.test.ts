@@ -37,7 +37,7 @@ describe('Extension host integration', () => {
 
   before(async () => {
     const extension = vscode.extensions.getExtension<SymfonyDoctrineToolsApi>(
-      'develop-it.symfony-dev-tools',
+      'bgauvrit.symfony-dev-tools',
     );
 
     assert.ok(extension, 'The extension should be available in the test host.');

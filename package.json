@@ -2,16 +2,31 @@
   "name": "symfony-dev-tools",
   "displayName": "Symfony Dev Tools",
   "description": "Editor-first Symfony tooling with translations, templates, tasks, and Doctrine diagrams.",
-  "version": "0.1.10",
-  "publisher": "develop-it",
+  "version": "0.1.12",
+  "publisher": "bgauvrit",
   "icon": "media/extension-icon.png",
   "license": "UNLICENSED",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bgauvrit/symfony-dev-tools.git"
+  },
+  "homepage": "https://github.com/bgauvrit/symfony-dev-tools#readme",
+  "bugs": {
+    "url": "https://github.com/bgauvrit/symfony-dev-tools/issues"
+  },
   "engines": {
     "vscode": "^1.98.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "symfony",
+    "php",
+    "twig",
+    "translations",
+    "doctrine",
+    "easyadmin"
   ],
   "galleryBanner": {
     "color": "#1c1e22",
@@ -53,7 +68,8 @@
     "test:unit": "npm run compile && node ./scripts/run-unit-tests.mjs",
     "test:integration": "npm run compile && node ./dist/test/runTest.js",
     "test": "npm run test:unit && npm run test:integration",
-    "package:vsix": "npm run compile && npx @vscode/vsce package --allow-missing-repository",
+    "package:vsix": "npm run compile && npx @vscode/vsce package",
+    "publish:vsce": "npm run compile && npx @vscode/vsce publish",
     "vscode:prepublish": "npm run compile"
   },
   "contributes": {

@@ -17,7 +17,8 @@ describe('Symfony project bootstrap script', () => {
     assert.equal(script.includes('symfony/maker-bundle'), true);
     assert.equal(script.includes('phpunit/phpunit'), true);
     assert.equal(script.includes('npm install'), true);
-    assert.equal(script.includes('"symfonyDevTools.pinnedTasks"'), true);
-    assert.equal(script.includes('Run server'), true);
+    assert.equal(script.includes('"symfonyDevTools.actions"'), true);
+    assert.equal(script.includes('php bin/console cache:clear'), true);
+    assert.equal(script.includes('.vscode/tasks.json'), false);
   });
 });

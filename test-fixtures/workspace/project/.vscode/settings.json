@@ -1,7 +1,5 @@
 {
-    "symfonyDevTools.pinnedTasks": [
-        "Run server",
-        "Controller"
-    ],
-    "symfonyDevTools.ignoredTranslationFiles": []
+    "symfonyDevTools.ignoredTranslationFiles": [],
+    "symfonyDevTools.actions": {},
+    "symfonyDevTools.pinnedTasks": []
 }

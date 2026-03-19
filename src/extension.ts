@@ -6,8 +6,8 @@ import { createSymfonyProject } from './features/bootstrap/projectBootstrap';
 import { EntityDiagramPanelController } from './features/entities/entityDiagramPanel';
 import { DiagramShortcutViewProvider } from './features/entities/diagramShortcutView';
 import { ActionsViewProvider } from './features/tasks/actionsView';
-import { setLastUsedTaskForGroup } from './features/tasks/taskHistory';
-import { getTaskCommandLine, getTaskGroup } from './features/tasks/taskGrouping';
+import { executeConfiguredAction, promptForActionSelection, type RunActionArgs } from './features/tasks/actionRunner';
+import { setLastUsedActionForGroup } from './features/tasks/taskHistory';
 import { executeWorkspaceTask, listWorkspaceTasks, type RunTaskArgs } from './features/tasks/taskRunner';
 import { insertContextTemplate } from './features/templates/templateInserter';
 import { TranslationAuditController } from './features/translations/auditController';
@@ -120,6 +120,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<Symfon
         actionsViewProvider.refresh();
       }
     }),
+    vscode.commands.registerCommand(COMMANDS.runAction, async (args?: RunActionArgs) => {
+      try {
+        const resolvedArgs = args ?? (await promptForActionSelection());
+
+        if (!resolvedArgs) {
+          return;
+        }
+
+        await executeConfiguredAction(resolvedArgs);
+        await setLastUsedActionForGroup(context.workspaceState, resolvedArgs.groupKey, resolvedArgs);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Impossible d executer l action Symfony.';
+        void vscode.window.showErrorMessage(message);
+        throw error;
+      } finally {
+        actionsViewProvider.refresh();
+      }
+    }),
     vscode.commands.registerCommand(COMMANDS.openEntityDiagram, async () => {
       await entityDiagramController.open();
     }),
@@ -190,32 +208,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<Symfon
       symfonyTwigCodeLensProvider.refresh();
     }),
     vscode.workspace.onDidSaveTextDocument((document) => {
-      if (document.fileName.endsWith('tasks.json') || document.fileName.endsWith('.code-workspace')) {
-        actionsViewProvider.refresh();
-      }
-
       entityDiagramController.scheduleRefreshForDocument(document);
       translationAuditController.scheduleRefreshForDocument(document);
       symfonyWebController.scheduleRefreshForDocument(document);
       symfonyTwigCodeLensProvider.refresh();
-    }),
-    vscode.tasks.onDidStartTask((event) => {
-      if (event.execution.task.scope === vscode.TaskScope.Global) {
-        return;
-      }
-
-      const group = getTaskGroup(getTaskCommandLine(event.execution.task));
-
-      if (!group) {
-        return;
-      }
-
-      void setLastUsedTaskForGroup(context.workspaceState, group.key, {
-        taskLabel: event.execution.task.name,
-        taskSource: event.execution.task.source,
-      }).finally(() => {
-        actionsViewProvider.refresh();
-      });
     }),
   );
 

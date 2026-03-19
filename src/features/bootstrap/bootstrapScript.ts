@@ -1,5 +1,7 @@
 import * as path from 'node:path';
 
+import { buildDefaultActionsConfiguration } from '../tasks/actionConfig';
+
 export type SymfonyProjectModule =
   | 'twig'
   | 'security'
@@ -32,8 +34,6 @@ function buildPowershellScript(options: SymfonyProjectBootstrapOptions): string 
     ...(composerPackages.length > 0 ? [`composer require ${composerPackages.join(' ')}`] : []),
     ...(composerDevPackages.length > 0 ? [`composer require --dev ${composerDevPackages.join(' ')}`] : []),
     ...(options.modules.includes('encore') ? ['npm install'] : []),
-    "New-Item -ItemType Directory -Force '.vscode' | Out-Null",
-    "@'\n" + buildDefaultTasksJson() + "\n'@ | Set-Content -Encoding UTF8 '.vscode\\tasks.json'",
     "@'\n" + buildWorkspaceFile(options.projectName) + "\n'@ | Set-Content -Encoding UTF8 '" + escapeSingleQuotes(`${options.projectName}.code-workspace`) + "'",
   ];
 
@@ -51,8 +51,6 @@ function buildBashScript(options: SymfonyProjectBootstrapOptions): string {
     ...(composerPackages.length > 0 ? [`composer require ${composerPackages.join(' ')}`] : []),
     ...(composerDevPackages.length > 0 ? [`composer require --dev ${composerDevPackages.join(' ')}`] : []),
     ...(options.modules.includes('encore') ? ['npm install'] : []),
-    "mkdir -p .vscode",
-    `cat <<'EOF' > .vscode/tasks.json\n${buildDefaultTasksJson()}\nEOF`,
     `cat <<'EOF' > ${options.projectName}.code-workspace\n${buildWorkspaceFile(options.projectName)}\nEOF`,
   ];
 
@@ -113,51 +111,24 @@ function buildComposerDevPackages(modules: SymfonyProjectModule[]): string[] {
   return packages;
 }
 
-function buildDefaultTasksJson(): string {
-  return `{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Run server",
-      "type": "shell",
-      "command": "symfony server:start"
-    },
-    {
-      "label": "Webpack",
-      "type": "shell",
-      "command": "npm run watch"
-    },
-    {
-      "label": "Webpack (build)",
-      "type": "shell",
-      "command": "npm run build"
-    },
-    {
-      "label": "Tests",
-      "type": "shell",
-      "command": "php bin/phpunit"
-    }
-  ]
-}`;
-}
-
 function buildWorkspaceFile(projectName: string): string {
-  return `{
-  "folders": [
+  return JSON.stringify(
     {
-      "path": "."
-    }
-  ],
-  "settings": {
-    "symfonyDevTools.pinnedTasks": [
-      "Run server",
-      "Webpack"
-    ],
-    "files.exclude": {
-      "var": true
-    }
-  }
-}`;
+      folders: [
+        {
+          path: '.',
+        },
+      ],
+      settings: {
+        'symfonyDevTools.actions': buildDefaultActionsConfiguration(),
+        'files.exclude': {
+          var: true,
+        },
+      },
+    },
+    null,
+    2,
+  );
 }
 
 function escapeSingleQuotes(value: string): string {

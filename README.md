@@ -10,7 +10,7 @@ Current scope:
 - show a global translation report in the `Translations` view
 - insert context-aware Twig and PHP templates from the active editor
 - bootstrap a new Symfony project from a guided module preset
-- keep workspace tasks and the Doctrine entity diagram available from the same extension
+- expose a configurable Symfony Actions view while keeping workspace tasks available from a compatibility command
 
 ## Local install
 
@@ -18,15 +18,31 @@ Current scope:
 npm install
 npm run compile
 npm run package:vsix
-code --install-extension symfony-dev-tools-0.1.12.vsix --force
+code --install-extension symfony-dev-tools-0.2.4.vsix --force
 ```
 
 ## Settings
 
 ```json
 {
+  "symfonyDevTools.actions": {
+    "cache": {
+      "enabled": false
+    },
+    "symfony": {
+      "title": "Symfony",
+      "description": "Symfony local server commands",
+      "color": "charts.purple",
+      "icon": "$(server-process)",
+      "actions": [
+        {
+          "label": "Restart server",
+          "command": "symfony server:stop;symfony server:start"
+        }
+      ]
+    }
+  },
   "symfonyDevTools.entityRoots": ["src/Entity"],
-  "symfonyDevTools.pinnedTasks": ["Run server", "Webpack", "Doctrine migration"],
   "symfonyDevTools.autoRefreshDiagram": true,
   "symfonyDevTools.includeMappedSuperclass": false,
   "symfonyDevTools.referenceLocale": "fr",
@@ -41,6 +57,7 @@ code --install-extension symfony-dev-tools-0.1.12.vsix --force
 - `symfonyDevTools.scanTranslations`
 - `symfonyDevTools.openTranslationsReport`
 - `symfonyDevTools.syncTranslations`
+- `symfonyDevTools.runAction`
 - `symfonyDevTools.insertTemplate`
 - `symfonyDevTools.createSymfonyProject`
 - `symfonyDevTools.runTask`
@@ -62,6 +79,19 @@ code --install-extension symfony-dev-tools-0.1.12.vsix --force
   - route names in the first argument
   - required route params auto-inserted when the route is selected
   - optional route params proposed later with `Ctrl+Space`
+
+## Actions view
+
+- built-in Symfony action groups are available without defining workspace tasks
+- use `symfonyDevTools.actions` to disable a group, replace a built-in group, or append a custom one
+- built-in groups keep their default `title`, `description`, `icon`, `color`, and `actions` unless you override those specific fields
+- groups accept:
+  - `title`
+  - `description`
+  - `color` as a VS Code theme color id such as `charts.purple`
+  - `icon` such as `$(server-process)`
+  - `actions[]` with `label`, optional `description`, and `command`
+- workspace tasks remain available only through `Symfony Dev Tools: Run Workspace Task`
 
 ## Translation audit
 
@@ -121,18 +151,6 @@ Examples:
 - EasyAdmin
 
 The generated project also gets default `.vscode/tasks.json` and `<project>.code-workspace` files aligned with the extension.
-
-## Actions view
-
-The `Actions` view mixes:
-
-- pinned workspace tasks
-- grouped task families such as `npm run` or `php bin/console make`
-- one `Last used` shortcut per task category
-
-The extension reuses existing workspace tasks. It does not duplicate commands already defined in the opened workspace.
-
-The `Translations` view keeps a dedicated `Sync translations` shortcut at the top of the audit tree.
 
 ## Doctrine diagram
 

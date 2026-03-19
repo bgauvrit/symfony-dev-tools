@@ -1,8 +1,8 @@
 {
   "name": "symfony-dev-tools",
   "displayName": "Symfony Dev Tools",
-  "description": "Editor-first Symfony tooling with translations, templates, tasks, and Doctrine diagrams.",
-  "version": "0.1.12",
+  "description": "Editor-first Symfony tooling with configurable actions, translations, templates, and Doctrine diagrams.",
+  "version": "0.2.4",
   "publisher": "bgauvrit",
   "icon": "media/extension-icon.png",
   "license": "UNLICENSED",
@@ -39,6 +39,7 @@
     "onView:symfonyDoctrineTools.actions",
     "onView:symfonyDoctrineTools.diagram",
     "onView:symfonyDoctrineTools.translations",
+    "onCommand:symfonyDevTools.runAction",
     "onCommand:symfonyDevTools.runTask",
     "onCommand:symfonyDevTools.openEntityDiagram",
     "onCommand:symfonyDevTools.refreshEntityDiagram",
@@ -74,6 +75,10 @@
   },
   "contributes": {
     "commands": [
+      {
+        "command": "symfonyDevTools.runAction",
+        "title": "Symfony Dev Tools: Run Action"
+      },
       {
         "command": "symfonyDevTools.runTask",
         "title": "Symfony Dev Tools: Run Workspace Task"
@@ -150,13 +155,71 @@
           },
           "description": "Entity root folders scanned by the Doctrine entity diagram."
         },
+        "symfonyDevTools.actions": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "Override built-in Symfony action groups shown in the Actions view. Each property key is a group id such as `cache`, `doctrine`, or `symfony`. For built-in groups, unspecified fields keep their default values.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Title displayed for the action group."
+              },
+              "description": {
+                "type": "string",
+                "description": "Optional description displayed next to the group title."
+              },
+              "color": {
+                "type": "string",
+                "description": "VS Code theme color id used for the group icon, for example charts.purple or terminal.ansiBlue."
+              },
+              "icon": {
+                "type": "string",
+                "description": "Codicon name such as $(server-process) or server-process."
+              },
+              "enabled": {
+                "type": "boolean",
+                "description": "When false, hides the group from the Actions view."
+              },
+              "actions": {
+                "type": "array",
+                "description": "List of shell commands exposed in the group.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "command"
+                  ],
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "description": "Action label shown in the tree view."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Optional secondary text shown for the action."
+                    },
+                    "command": {
+                      "type": "string",
+                      "description": "Shell command executed when the action is launched."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "symfonyDevTools.pinnedTasks": {
           "type": "array",
           "default": [],
           "items": {
             "type": "string"
           },
-          "description": "Workspace task labels pinned at the top of the Actions view."
+          "description": "Workspace task labels pinned at the top of the Actions view.",
+          "deprecationMessage": "The Actions view now reads symfonyDevTools.actions instead of workspace tasks. This setting no longer has any effect."
         },
         "symfonyDevTools.autoRefreshDiagram": {
           "type": "boolean",

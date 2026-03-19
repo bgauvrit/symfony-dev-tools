@@ -2,6 +2,7 @@ export const EXTENSION_NAMESPACE = 'symfonyDevTools';
 
 export const COMMANDS = {
   runTask: 'symfonyDevTools.runTask',
+  runAction: 'symfonyDevTools.runAction',
   openEntityDiagram: 'symfonyDevTools.openEntityDiagram',
   refreshEntityDiagram: 'symfonyDevTools.refreshEntityDiagram',
   openEntityFile: 'symfonyDevTools.openEntityFile',

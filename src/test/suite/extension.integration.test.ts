@@ -75,44 +75,115 @@ describe('Extension host integration', () => {
     await fs.rm(generatedRouteCompletionTwigPath, { force: true });
     await vscode.workspace
       .getConfiguration('symfonyDevTools')
+      .update('actions', {}, vscode.ConfigurationTarget.Workspace);
+    await vscode.workspace
+      .getConfiguration('symfonyDevTools')
+      .update('pinnedTasks', [], vscode.ConfigurationTarget.Workspace);
+    await vscode.workspace
+      .getConfiguration('symfonyDevTools')
       .update('ignoredTranslationFiles', [], vscode.ConfigurationTarget.Workspace);
     await extensionApi.scanTranslations();
   });
 
-  it('loads actions and promotes pinned tasks', async () => {
-    await vscode.workspace
-      .getConfiguration('symfonyDevTools')
-      .update('pinnedTasks', ['Run server', 'Controller'], vscode.ConfigurationTarget.Workspace);
-
-    await wait(100);
-
+  it('loads built-in Symfony action groups by default', async () => {
     const actions = await extensionApi.getActionsSnapshot();
     const labels = actions.map((action) => action.label);
+    const cacheGroup = actions.find((action) => action.label === 'Cache');
+    const symfonyGroup = actions.find((action) => action.label === 'Symfony');
 
-    assert.deepEqual(labels.slice(0, 2), [
-      'Run server',
-      'Controller',
+    assert.deepEqual(labels, [
+      'Cache',
+      'Doctrine',
+      'Make',
+      'Security',
+      'Symfony',
     ]);
-    assert.equal(labels.includes('Open diagram'), false);
-    assert.equal(labels.includes('Sync translations'), false);
+    assert.equal(cacheGroup?.color, 'charts.orange');
+    assert.equal(cacheGroup?.children?.[0]?.color, 'charts.orange');
+    assert.equal(cacheGroup?.children?.[0]?.label, 'Clear cache');
+    assert.equal(symfonyGroup?.children?.every((child) => child.color === 'charts.purple'), true);
+    assert.equal(symfonyGroup?.children?.map((child) => child.label).join(','), 'Stop server,Start server');
   });
 
-  it('groups related workspace tasks by command family', async () => {
+  it('overrides, disables, and appends configured action groups', async () => {
+    await vscode.workspace
+      .getConfiguration('symfonyDevTools')
+      .update(
+        'actions',
+        {
+          cache: {
+            enabled: false,
+          },
+          symfony: {
+            color: 'charts.yellow',
+            actions: [
+              {
+                label: 'Restart server',
+                description: 'Stop then start the local Symfony server',
+                command: 'symfony server:stop;symfony server:start',
+              },
+            ],
+          },
+          project: {
+            title: 'Project',
+            description: 'Project level commands',
+            color: 'terminal.ansiBlue',
+            icon: 'package',
+            actions: [
+              {
+                label: 'Install deps',
+                command: 'composer install',
+              },
+            ],
+          },
+        },
+        vscode.ConfigurationTarget.Workspace,
+      );
+
+    await waitFor(async () => {
+      const nextActions = await extensionApi.getActionsSnapshot();
+
+      return nextActions.some((action) => action.label === 'Project');
+    });
+
     const actions = await extensionApi.getActionsSnapshot();
     const labels = actions.map((action) => action.label);
-    const npmRunGroup = actions.find((action) => action.label === 'npm run');
-    const makeGroup = actions.find((action) => action.label === 'php bin/console make');
+    const symfonyGroup = actions.find((action) => action.label === 'Symfony');
+    const projectGroup = actions.find((action) => action.label === 'Project');
 
-    assert.equal(labels.includes('npm run'), true);
-    assert.equal(labels.includes('php bin/console make'), true);
-    assert.equal(npmRunGroup?.iconColor, 'charts.green');
-    assert.equal(makeGroup?.iconColor, 'charts.blue');
-    assert.equal(labels.includes('Webpack'), false);
-    assert.equal(labels.includes('Webpack (build)'), false);
-    assert.equal(
-      actions.some((action) => action.children?.some((child) => child.label === 'Webpack (build)' || child.label === 'Webpack')),
-      false,
-    );
+    assert.deepEqual(labels, ['Doctrine', 'Make', 'Security', 'Symfony', 'Project']);
+    assert.equal(symfonyGroup?.color, 'charts.yellow');
+    assert.equal(symfonyGroup?.description, 'Symfony CLI server commands');
+    assert.deepEqual(symfonyGroup?.children?.map((child) => child.label), ['Restart server']);
+    assert.deepEqual(projectGroup?.children?.map((child) => child.label), ['Install deps']);
+  });
+
+  it('executes configured actions and tracks the last used item per group', async () => {
+    const taskStarted = onceTaskStarted('Start server');
+
+    await vscode.commands.executeCommand(COMMANDS.runAction, {
+      groupKey: 'symfony',
+      groupTitle: 'Symfony',
+      label: 'Start server',
+      command: 'symfony server:start',
+    });
+
+    await taskStarted;
+
+    await waitFor(async () => {
+      const nextActions = await extensionApi.getActionsSnapshot();
+      const symfonyGroup = nextActions.find((action) => action.label === 'Symfony');
+
+      return symfonyGroup?.children?.[0]?.description === 'Last used';
+    });
+
+    const actions = await extensionApi.getActionsSnapshot();
+    const symfonyGroup = actions.find((action) => action.label === 'Symfony');
+    const lastUsed = symfonyGroup?.children?.[0];
+
+    assert.equal(lastUsed?.label, 'Start server');
+    assert.equal(lastUsed?.description, 'Last used');
+    assert.equal(lastUsed?.color, 'charts.purple');
   });
 
   it('executes an existing workspace task and rejects a missing one', async () => {
@@ -123,13 +194,6 @@ describe('Extension host integration', () => {
     });
 
     await taskStarted;
-
-    const actions = await extensionApi.getActionsSnapshot();
-    const symfonyGroup = actions.find((action) => action.label === 'symfony');
-    const lastUsed = symfonyGroup?.children?.[0];
-
-    assert.equal(lastUsed?.label, 'Run server');
-    assert.equal(lastUsed?.description, 'Last used');
 
     await assert.rejects(
       () =>

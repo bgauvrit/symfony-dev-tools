@@ -18,7 +18,7 @@ Current scope:
 npm install
 npm run compile
 npm run package:vsix
-code --install-extension symfony-dev-tools-0.2.4.vsix --force
+code --install-extension symfony-dev-tools-0.2.6.vsix --force
 ```
 
 ## Settings

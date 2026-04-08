@@ -107,4 +107,55 @@ class Product
 
     assert.equal(product?.fields.some((field) => field.name === 'liveLabel'), true);
   });
+
+  it('resolves self::class relations without falling back to Collection', async () => {
+    const optionChoicePath = path.join(fixtureRoot, 'Options', 'OptionChoice.php');
+    const model = await scanEntityRoots([fixtureRoot], {
+      textOverrides: new Map([
+        [
+          optionChoicePath,
+          `<?php
+
+namespace App\\Entity\\Options;
+
+use Doctrine\\Common\\Collections\\Collection;
+use Doctrine\\ORM\\Mapping as ORM;
+
+#[ORM\\Entity]
+class OptionChoice
+{
+    #[ORM\\Id]
+    #[ORM\\Column]
+    private ?int $id = null;
+
+    #[ORM\\ManyToOne(targetEntity: self::class, inversedBy: 'children')]
+    private ?self $parent = null;
+
+    /**
+     * @var Collection<int, self>
+     */
+    #[ORM\\OneToMany(targetEntity: self::class, mappedBy: 'parent')]
+    private Collection $children;
+}`,
+        ],
+      ]),
+    });
+
+    const selfRelation = model.relations.find(
+      (relation) =>
+        relation.source === 'App\\Entity\\Options\\OptionChoice' &&
+        relation.target === 'App\\Entity\\Options\\OptionChoice' &&
+        relation.label === 'parent',
+    );
+
+    assert.ok(selfRelation);
+    assert.equal(
+      model.warnings.some((warning) => warning.includes('Doctrine\\Common\\Collections\\Collection')),
+      false,
+    );
+    assert.equal(
+      model.warnings.some((warning) => warning.includes('App\\Entity\\Options\\self')),
+      false,
+    );
+  });
 });

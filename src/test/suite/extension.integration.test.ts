@@ -13,6 +13,22 @@ describe('Extension host integration', () => {
   const generatedTwigTemplatePath = path.join(workspaceRoot, 'templates', 'catalog', '_auto_test.html.twig');
   const generatedIcuTemplatePath = path.join(workspaceRoot, 'templates', 'cart', '_translation_icu_probe.html.twig');
   const generatedDynamicTwigPath = path.join(workspaceRoot, 'templates', 'faq', '_dynamic_probe.html.twig');
+  const generatedExplicitDomainTwigTemplatePath = path.join(
+    workspaceRoot,
+    'templates',
+    'account',
+    '_explicit_domain_probe.html.twig',
+  );
+  const generatedExplicitDomainFrenchTranslationsPath = path.join(
+    workspaceRoot,
+    'translations',
+    'explicit_domain_probe.fr.yaml',
+  );
+  const generatedExplicitDomainEnglishTranslationsPath = path.join(
+    workspaceRoot,
+    'translations',
+    'explicit_domain_probe.en.yaml',
+  );
   const generatedIcuFrenchTranslationsPath = path.join(workspaceRoot, 'translations', 'messages+intl-icu.fr.yaml');
   const generatedIcuEnglishTranslationsPath = path.join(workspaceRoot, 'translations', 'messages+intl-icu.en.yaml');
   const generatedComputedTwigTemplatePath = path.join(workspaceRoot, 'templates', 'faq', '_computed_probe.html.twig');
@@ -58,6 +74,9 @@ describe('Extension host integration', () => {
     await fs.rm(generatedTwigTemplatePath, { force: true });
     await fs.rm(generatedIcuTemplatePath, { force: true });
     await fs.rm(generatedDynamicTwigPath, { force: true });
+    await fs.rm(generatedExplicitDomainTwigTemplatePath, { force: true });
+    await fs.rm(generatedExplicitDomainFrenchTranslationsPath, { force: true });
+    await fs.rm(generatedExplicitDomainEnglishTranslationsPath, { force: true });
     await fs.rm(generatedIcuFrenchTranslationsPath, { force: true });
     await fs.rm(generatedIcuEnglishTranslationsPath, { force: true });
     await fs.rm(generatedComputedTwigTemplatePath, { force: true });
@@ -419,6 +438,52 @@ describe('Extension host integration', () => {
     );
     assert.equal(dynamicIssues.length, 2);
     assert.equal(dynamicIssueIds.size, dynamicIssues.length);
+  });
+
+  it('does not treat twig filters with an explicit domain as dynamic function calls', async () => {
+    await fs.mkdir(path.dirname(generatedExplicitDomainTwigTemplatePath), { recursive: true });
+    await fs.writeFile(
+      generatedExplicitDomainFrenchTranslationsPath,
+      ['rememberme:', '    _: "Se souvenir de moi"', ''].join('\n'),
+      'utf8',
+    );
+    await fs.writeFile(
+      generatedExplicitDomainEnglishTranslationsPath,
+      ['rememberme:', '    _: "Remember me"', ''].join('\n'),
+      'utf8',
+    );
+    await fs.writeFile(
+      generatedExplicitDomainTwigTemplatePath,
+      [
+        "{% trans_default_domain 'pages' %}",
+        "<label>{{ 'rememberme._' | trans({}, 'explicit_domain_probe') }}</label>",
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await extensionApi.scanTranslations();
+
+    await waitFor(
+      () =>
+        !extensionApi
+          .getTranslationState()
+          .issues.some((issue) => issue.sourceFilePath === generatedExplicitDomainTwigTemplatePath),
+    );
+
+    const translationState = extensionApi.getTranslationState();
+    const probeIssues = translationState.issues.filter(
+      (issue) =>
+        issue.sourceFilePath === generatedExplicitDomainTwigTemplatePath ||
+        (issue.key === 'rememberme._' && issue.domain === 'explicit_domain_probe'),
+    );
+
+    assert.equal(
+      probeIssues.some(
+        (issue) => issue.kind === 'dynamic' || issue.kind === 'missing' || issue.kind === 'unused',
+      ),
+      false,
+    );
   });
 
   it('resolves computed FAQ-like twig translation keys without reporting them as unused', async () => {

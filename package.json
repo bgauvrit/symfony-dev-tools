@@ -2,7 +2,7 @@
   "name": "symfony-dev-tools",
   "displayName": "Symfony Dev Tools",
   "description": "Editor-first Symfony tooling with configurable actions, translations, templates, and Doctrine diagrams.",
-  "version": "0.2.4",
+  "version": "0.2.6",
   "publisher": "bgauvrit",
   "icon": "media/extension-icon.png",
   "license": "UNLICENSED",

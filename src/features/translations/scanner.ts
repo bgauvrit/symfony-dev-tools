@@ -1612,7 +1612,17 @@ function isTwigTopLevelIndex(expressionSource: string, targetIndex: number): boo
 function isTwigFunctionBoundary(expressionSource: string, startIndex: number): boolean {
   const previousCharacter = startIndex > 0 ? expressionSource[startIndex - 1] : undefined;
 
-  return previousCharacter === undefined || !/[A-Za-z0-9_]/.test(previousCharacter);
+  if (previousCharacter !== undefined && /[A-Za-z0-9_]/.test(previousCharacter)) {
+    return false;
+  }
+
+  let previousNonWhitespaceIndex = startIndex - 1;
+
+  while (previousNonWhitespaceIndex >= 0 && /\s/.test(expressionSource[previousNonWhitespaceIndex])) {
+    previousNonWhitespaceIndex -= 1;
+  }
+
+  return previousNonWhitespaceIndex < 0 || expressionSource[previousNonWhitespaceIndex] !== '|';
 }
 
 function skipTwigWhitespace(expressionSource: string, startIndex: number): number {

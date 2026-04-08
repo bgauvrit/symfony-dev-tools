@@ -321,10 +321,12 @@ function buildRelationCandidate(
   const relationArgs = getNamedArguments(relationAttribute.args);
   const joinColumnArgs = getNamedArguments(attributes.get('JoinColumn')?.args);
   const explicitTarget = relationArgs.targetEntity
-    ? resolveClassName(String(relationArgs.targetEntity), namespace, uses)
+    ? resolveClassName(String(relationArgs.targetEntity), namespace, uses, entity.name)
     : undefined;
   const propertyType = getPropertyType(property);
-  const resolvedPropertyType = propertyType ? resolveClassName(stripNullablePrefix(propertyType), namespace, uses) : undefined;
+  const resolvedPropertyType = propertyType
+    ? resolveClassName(stripNullablePrefix(propertyType), namespace, uses, entity.name)
+    : undefined;
   const target = explicitTarget ?? resolvedPropertyType;
 
   if (!target) {
@@ -399,7 +401,7 @@ function parseArgumentValue(node: AstNode | undefined): unknown {
       return node.name;
     case 'staticlookup':
       if (node.offset?.name === 'class') {
-        return node.what?.name ?? undefined;
+        return node.what?.name ?? node.what?.raw ?? undefined;
       }
 
       return `${node.what?.name ?? ''}::${node.offset?.name ?? ''}`;
@@ -449,12 +451,21 @@ function readNullable(value: unknown, propertyNullable: boolean): boolean {
   return Boolean(propertyNullable);
 }
 
-function resolveClassName(rawName: string, namespace: string, uses: Map<string, string>): string {
+function resolveClassName(
+  rawName: string,
+  namespace: string,
+  uses: Map<string, string>,
+  currentClassName?: string,
+): string {
   if (!rawName || isScalarName(rawName)) {
     return rawName;
   }
 
   const trimmed = stripNullablePrefix(rawName);
+
+  if ((trimmed === 'self' || trimmed === 'static') && currentClassName) {
+    return `${namespace}\\${currentClassName}`;
+  }
 
   if (trimmed.startsWith('\\')) {
     return trimmed.slice(1);
